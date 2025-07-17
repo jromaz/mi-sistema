@@ -1,0 +1,26 @@
+/* style.css - Colores Santander */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f9fa;
+}
+.sidebar {
+  background-color: #c8102e !important;
+}
+.sidebar .nav-link {
+  color: #ffffff;
+}
+.sidebar .nav-link:hover {
+  background-color: #a10e25;
+}
+.btn-primary {
+  background-color: #c8102e;
+  border-color: #c8102e;
+}
+/* Tarjetas resumen */
+.card-summary {
+  border: 1px solid #c8102e;
+  color: #c8102e;
+}
+.card-summary .card-body {
+  text-align: center;
+}

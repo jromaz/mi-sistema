@@ -1,0 +1,1 @@
+<?php echo 'Aquí irá el CRUD de terminales.'; ?>
