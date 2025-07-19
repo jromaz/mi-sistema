@@ -1,47 +1,55 @@
 <?php
+// views/mapa_unidades.php — Mapa de Unidades
+// Zona Horaria local
+
 require __DIR__ . '/../config/db.php';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $pdo->prepare("
-    INSERT INTO unidad
-      (codigo_qr, id_terminal, estado, sim_imei, gps_lat, gps_lng, fecha_ultima_actualizacion)
-    VALUES (?, ?, ?, ?, NULL, NULL, NOW())
-  ")->execute([
-    $_POST['codigo_qr'],
-    $_POST['id_terminal'],
-    $_POST['estado'],
-    $_POST['sim_imei']
-  ]);
-  echo '<div class="alert alert-success">Unidad creada</div>';
-  include 'unidades.php'; // recarga el listado actualizado
-  exit;
-}
-// Cargamos terminales para el selector
-$terms = $pdo->query("SELECT id, nombre FROM terminales")->fetchAll();
+
+// Obtener todas las unidades con ubicación definida
+define('PER_PAGE', 5);
+$stmt = $pdo->query(
+    "SELECT u.id_unidad AS id,
+            u.codigo_qr AS codigo,
+            u.estado AS estado,
+            u.gps_lat AS lat,
+            u.gps_lng AS lng,
+            t.nombre AS terminal
+     FROM unidad u
+     LEFT JOIN terminales t ON u.terminal_id = t.id
+     WHERE u.gps_lat IS NOT NULL AND u.gps_lng IS NOT NULL"
+);
+unidades = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-<h5>Crear Unidad</h5>
-<form method="post" class="mt-3">
-  <div class="mb-3">
-    <label class="form-label">QR</label>
-    <input name="codigo_qr" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Terminal</label>
-    <select name="id_terminal" class="form-select" required>
-      <?php foreach($terms as $t): ?>
-        <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nombre']) ?></option>
-      <?php endforeach; ?>
-    </select>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Estado</label>
-    <select name="estado" class="form-select">
-      <option value="activo">activo</option>
-      <option value="inactivo">inactivo</option>
-    </select>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">SIM/IMEI</label>
-    <input name="sim_imei" class="form-control">
-  </div>
-  <button type="submit" class="btn btn-primary">Guardar</button>
-</form>
+
+<h5>Mapa de Unidades</h5>
+<!-- Botón para crear unidad -->
+<div class="d-flex mb-3">
+  <button class="btn btn-success" onclick="loadView('create_unidad')">Crear Unidad</button>
+</div>
+
+<!-- Mapa con todas las unidades -->
+<div
+  id="mapa-unidades"
+  style="height:400px; border:1px solid #ccc;"
+  data-unidades='<?= json_encode($unidades, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
+></div>
+
+<script>
+(function(){
+  const el = document.getElementById('mapa-unidades');
+  if (!el) return;
+  const data = JSON.parse(el.dataset.unidades || '[]');
+  const map  = L.map(el).setView([-29.412, -66.851], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  data.forEach(u => {
+    L.marker([u.lat, u.lng])
+      .addTo(map)
+      .bindPopup(
+        `<strong>Código:</strong> ${u.codigo}<br>` +
+        `<strong>Terminal:</strong> ${u.terminal || 'No asignada'}<br>` +
+        `<strong>Estado:</strong> ${u.estado}`
+      );
+  });
+})();
+</script>

@@ -1,18 +1,14 @@
 <?php
-// index.php  -- Reb Rioja en Bici
-require 'config/db.php';  // conecta $pdo
-?>
-<!DOCTYPE html>
+// index.php — Carga dinámica de vistas
+require __DIR__ . '/config/db.php';
+?><!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reb Rioja en Bici - Dashboard</title>
-  <!-- Bootstrap CSS -->
+  <title>Reb Rioja en Bici</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Estilos Santander -->
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -27,27 +23,33 @@ require 'config/db.php';  // conecta $pdo
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#" onclick="loadView('mapa_terminales')">Mapa Terminales</a>
+            <ul class="nav flex-column ms-3">
+              <li class="nav-item">
+                <a class="nav-link" href="#" onclick="loadView('create_terminal')">Crear Terminal</a>
+              </li>
+            </ul>
           </li>
-          <li class="nav-item">
-          <a class="nav-link" href="#" onclick="loadView('unidades')">Unidades</a>
-          </li>
-          <!-- …añade más si necesitas… -->
+          <!-- … otras opciones … -->
         </ul>
       </nav>
 
-      <!-- Contenido principal -->
+      <!-- Contenedor principal -->
       <main class="col-md-10 ms-sm-auto px-md-4">
         <div id="main-content" class="mt-4"></div>
       </main>
     </div>
   </div>
 
-  <!-- Scripts: Bootstrap, Leaflet y nuestro app.js -->
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="assets/js/app.js"></script>
-
-  <!-- Al cargar la página arrancamos con Dashboard -->
-  <script>loadView('dashboard');</script>
+  <script>
+    // 7) Carga la vista indicada por ?view=… o 'dashboard' por defecto
+    document.addEventListener('DOMContentLoaded', () => {
+      const view = new URLSearchParams(window.location.search).get('view') || 'dashboard';
+      loadView(view);
+    });
+  </script>
 </body>
 </html>

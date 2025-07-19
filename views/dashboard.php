@@ -1,51 +1,57 @@
 <?php
-// views/dashboard.php
-require __DIR__ . '/../config/db.php';  // define $pdo
+// views/dashboard.php — Estadísticas y mapa de terminales
+// Actualizado: 2025-07-18 12:15 (ART) Zona Horaria: America/Argentina/La_Rioja
 
-// Consultas estadísticas
-$totalStmt     = $pdo->query("SELECT COUNT(*) FROM unidad");
-$total         = $totalStmt->fetchColumn();
-$actStmt       = $pdo->query("SELECT COUNT(*) FROM unidad WHERE estado='activo'");
-$activas       = $actStmt->fetchColumn();
-$mantStmt      = $pdo->query("SELECT COUNT(*) FROM mantenimiento");
-$mantenimientos = $mantStmt->fetchColumn();
-$viajeStmt     = $pdo->prepare("SELECT COUNT(*) FROM viaje WHERE DATE(inicio)=CURDATE()");
-$viajeStmt->execute();
-$viajesHoy     = $viajeStmt->fetchColumn();
+// Fijar zona horaria
+date_default_timezone_set('America/Argentina/La_Rioja');
+
+require __DIR__ . '/../config/db.php';
+
+// 1) Total de terminales
+$totalTerminales = $pdo
+    ->query("SELECT COUNT(*) FROM terminales")
+    ->fetchColumn();
+
+// 2) Terminales activas
+$terminalesActivas = $pdo
+    ->query("SELECT COUNT(*) FROM terminales WHERE activo = 1")
+    ->fetchColumn();
+
+// Eliminadas las secciones de mantenimiento y viajes (tablas no existen)
+
+// Datos para el mapa (todas las terminales)
+$termStmt = $pdo->query("
+    SELECT id, nombre, latitud AS lat, longitud AS lng
+    FROM terminales
+    WHERE latitud IS NOT NULL AND longitud IS NOT NULL
+");
+$terminals = $termStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 <div class="row g-3 mb-4">
   <div class="col">
     <div class="card card-summary">
       <div class="card-body text-center">
-        <strong>Total Unidades</strong><br><h3><?= $total ?></h3>
+        <strong>Total Terminales</strong><br>
+        <h3><?= $totalTerminales ?></h3>
       </div>
     </div>
   </div>
   <div class="col">
     <div class="card card-summary">
       <div class="card-body text-center">
-        <strong>Activas</strong><br><h3><?= $activas ?></h3>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card card-summary">
-      <div class="card-body text-center">
-        <strong>Mantenimiento</strong><br><h3><?= $mantenimientos ?></h3>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card card-summary">
-      <div class="card-body text-center">
-        <strong>Viajes Hoy</strong><br><h3><?= $viajesHoy ?></h3>
+        <strong>Activas</strong><br>
+        <h3><?= $terminalesActivas ?></h3>
       </div>
     </div>
   </div>
 </div>
+
 <hr>
 
-<h5>Seleccionar Ubicación en el Mapa</h5>
-<div id="mapa-dashboard" style="height: 400px; border:1px solid #ccc;"></div>
-<p class="mt-2">Haz clic para colocar la terminal.</p>
-<button id="btn-create-terminal" class="btn btn-primary">Crear Terminal</button>
+<h5>Mapa de Terminales</h5>
+<div
+  id="mapa-dashboard"
+  style="height:400px; border:1px solid #ccc;"
+  data-terminals='<?= json_encode($terminals, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
+></div>
